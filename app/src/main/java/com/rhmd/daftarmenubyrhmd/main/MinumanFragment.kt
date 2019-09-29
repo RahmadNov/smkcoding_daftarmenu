@@ -4,12 +4,18 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.rhmd.daftarmenubyrhmd.R
 import com.rhmd.daftarmenubyrhmd.R.layout
-import com.rhmd.daftarmenubyrhmd.data.MenyuModel
+import com.rhmd.daftarmenubyrhmd.adapter.RvAdapterMakanan
+import com.rhmd.daftarmenubyrhmd.adapter.RvAdapterMinuman
+import com.rhmd.daftarmenubyrhmd.data.MenuDB
+import com.rhmd.daftarmenubyrhmd.data.MenuModelMakan
+import com.rhmd.daftarmenubyrhmd.data.MenuModelMinum
 import kotlinx.android.synthetic.main.minuman_fragmen.rv_minum
+
 
 class MinumanFragment: Fragment() {
 
@@ -18,8 +24,9 @@ class MinumanFragment: Fragment() {
             return MinumanFragment()
         }
     }
-        val dataMinuman= mutableListOf<MenyuModel>()
-        val rvAdapter=RvAdapter(dataMinuman)
+        val dataMinuman= mutableListOf<MenuModelMinum>()
+        val mrvAdapter= RvAdapterMinuman(dataMinuman)
+        var db: MenuDB? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(layout.minuman_fragmen,container, false)
@@ -27,14 +34,23 @@ class MinumanFragment: Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        rv_minum.adapter=rvAdapter
+        rv_minum.adapter=mrvAdapter
         rv_minum.layoutManager=LinearLayoutManager(context)
-        addmyData()
+
+        db = MenuDB.getInstance(context!!)
+        getMenuMinuman()
     }
-    private fun addmyData(){
-        dataMinuman.add(MenyuModel("Es Kopi","Rp. 3.000", R.drawable.kopi))
-        dataMinuman.add(MenyuModel("Es Teh","Rp. 3.000",R.drawable.teh))
-        dataMinuman.add(MenyuModel("Es Teler","Rp. 5.000",R.drawable.teler))
-        rvAdapter.notifyDataSetChanged()
-    }
-    }
+    private fun getMenuMinuman() {
+        db?.menuDao()?.ambilMenuMinuman()
+            ?.observe(this, Observer {hasil ->
+                when (hasil.size==0) {
+                    true -> {
+                        Toast.makeText(context, "Data Minuman Masih Kosong", Toast.LENGTH_SHORT).show()
+                    }
+                    false -> {
+                        dataMinuman.clear()
+                        dataMinuman.addAll(hasil)
+                        mrvAdapter
+                            .notifyDataSetChanged()
+                    }}})}}
+
